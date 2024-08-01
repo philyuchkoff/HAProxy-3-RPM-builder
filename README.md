@@ -13,7 +13,6 @@ Perform the following steps on a build box as a regular user:
     cd /opt
     sudo git clone https://github.com/philyuchkoff/HAProxy-2-RPM-builder.git
     cd ./HAProxy-2-RPM-builder
-    sudo sed -i 's/yum/dnf/' Makefile
 
 ### Build:
 
