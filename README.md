@@ -11,7 +11,7 @@ Perform the following steps on a build box as a regular user:
 
     sudo dnf -y groupinstall 'Development Tools'
     cd /opt
-    sudo git clone https://github.com/philyuchkoff/HAProxy-2-RPM-builder.git
+    sudo git clone https://github.com/philyuchkoff/HAProxy-3-RPM-builder.git
     cd ./HAProxy-2-RPM-builder
 
 ### Build:
