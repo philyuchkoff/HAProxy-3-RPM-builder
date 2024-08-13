@@ -92,12 +92,12 @@ pcre_opts="USE_PCRE=1"
 USE_TFO=
 USE_NS=
 
-%if 0%{?el7} || 0%{?amzn2} || 0%{?el8} || 0%{?el9}
+%if 0%{?el7} || 0%{?el8} || 0%{?el9}
 systemd_opts="USE_SYSTEMD=1"
 pcre_opts="USE_PCRE=1 USE_PCRE_JIT=1"
 %endif
 
-%if 0%{?el7} || 0%{?amzn2} || 0%{?amzn1} || 0%{?el8} || 0%{?el9}
+%if 0%{?el7} || 0%{?el8} || 0%{?el9}
 USE_TFO=1
 USE_NS=1
 %endif
