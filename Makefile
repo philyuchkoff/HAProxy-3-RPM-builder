@@ -3,7 +3,7 @@ MAINVERSION?=3.0
 LUA_VERSION=5.4.7
 USE_LUA?=0
 NO_SUDO?=0
-USE_PROMEX?=0
+USE_PROMETHEUS?=0
 VERSION=$(shell wget -qO- https://git.haproxy.org/git/haproxy-${MAINVERSION}.git/refs/tags/ | sed -n 's:.*>\(.*\)</a>.*:\1:p' | sed 's/^.//' | sort -rV | head -1)
 ifeq ("${VERSION}","./")
 	VERSION="${MAINVERSION}.0"
@@ -88,7 +88,7 @@ ifeq ($(NO_SUDO),1)
 	--define "_rpmdir %{_topdir}/RPMS" \
 	--define "_srcrpmdir %{_topdir}/SRPMS" \
 	--define "_use_lua ${USE_LUA}" \
-	--define "_use_prometheus ${USE_PROMEX}"
+	--define "_use_prometheus ${USE_PROMETHEUS}"
 else
 	sudo cp -r ./SPECS/* ./rpmbuild/SPECS/ || true
 	sudo cp -r ./SOURCES/* ./rpmbuild/SOURCES/ || true
@@ -102,5 +102,5 @@ else
 	--define "_rpmdir %{_topdir}/RPMS" \
 	--define "_srcrpmdir %{_topdir}/SRPMS" \
 	--define "_use_lua ${USE_LUA}" \
-	--define "_use_prometheus ${USE_PROMEX}"
+	--define "_use_prometheus ${USE_PROMETHEUS}"
 endif
