@@ -8,7 +8,7 @@ VERSION=$(shell wget -qO- https://git.haproxy.org/git/haproxy-${MAINVERSION}.git
 ifeq ("${VERSION}","./")
 	VERSION="${MAINVERSION}.0"
 endif
-RELEASE=1
+RELEASE?=1
 
 all: build
 
@@ -22,6 +22,8 @@ endif
 clean:
 ifeq ($(NO_SUDO),1)
 	rm -f ./SOURCES/haproxy-${VERSION}.tar.gz
+ 	rm -f ./SOURCES/haproxy-*.tar.gz
+	rm -rf ./SOURCES/lua-*
 	rm -rf ./rpmbuild
 	mkdir -p ./rpmbuild/SPECS/ ./rpmbuild/SOURCES/ ./rpmbuild/RPMS/ ./rpmbuild/SRPMS/
 	rm -rf ./lua-${LUA_VERSION}*
