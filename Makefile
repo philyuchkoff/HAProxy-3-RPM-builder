@@ -22,16 +22,15 @@ endif
 clean:
 ifeq ($(NO_SUDO),1)
 	rm -f ./SOURCES/haproxy-${VERSION}.tar.gz
- 	rm -f ./SOURCES/haproxy-*.tar.gz
-	rm -rf ./SOURCES/lua-*
+	rm -rf ./lua-${LUA_VERSION}*
 	rm -rf ./rpmbuild
 	mkdir -p ./rpmbuild/SPECS/ ./rpmbuild/SOURCES/ ./rpmbuild/RPMS/ ./rpmbuild/SRPMS/
-	rm -rf ./lua-${LUA_VERSION}*
+
 else
 	sudo rm -f ./SOURCES/haproxy-${VERSION}.tar.gz
+	sudo rm -rf ./lua-${LUA_VERSION}*
 	sudo rm -rf ./rpmbuild
 	sudo mkdir -p ./rpmbuild/SPECS/ ./rpmbuild/SOURCES/ ./rpmbuild/RPMS/ ./rpmbuild/SRPMS/
-	sudo rm -rf ./lua-${LUA_VERSION}*
 endif
 
 download-upstream:
