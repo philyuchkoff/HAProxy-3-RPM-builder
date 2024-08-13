@@ -26,7 +26,7 @@ Perform the following steps on a build box as a regular user:
 
 #### With Prometheus module:
 
-    sudo make USE_PROMETHEUS=1
+    sudo make USE_PROMEX=1
 
 #### Without sudo for YUM:
 
