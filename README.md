@@ -51,7 +51,7 @@ Resulting RPM will be stored in
 
 or, if you build *.rpm with Docker:
 
-    sudo yum -y install RPMS/haproxy-3.0.3-1.el8.x86_64.rpm 
+    sudo dnf -y install RPMS/haproxy-3.0.3-1.el8.x86_64.rpm 
     
 
 ### Check after install:
