@@ -66,9 +66,7 @@ availability environments. Indeed, it can:
 - add/modify/delete HTTP headers both ways
 - block requests matching a particular pattern
 
-It needs very little resource. Its event-driven architecture allows it to easily
-handle thousands of simultaneous connections on hundreds of instances without
-risking the system's stability.
+It needs very little resource. Its event-driven architecture allows it to easily handle thousands of simultaneous connections on hundreds of instances without risking the system's stability.
 
 https://github.com/philyuchkoff/HAProxy-3-RPM-builder
 
@@ -202,7 +200,7 @@ fi
 
 %files
 %defattr(-,root,root)
-%doc CHANGELOG README examples/*.cfg doc/architecture.txt doc/configuration.txt doc/intro.txt doc/management.txt doc/proxy-protocol.txt
+%doc CHANGELOG examples/*.cfg doc/configuration.txt doc/intro.txt doc/management.txt doc/proxy-protocol.txt
 %if 0%{?el7} || 0%{?amzn2} || 0%{?el8} || 0%{?el9}
     %license LICENSE
 %endif
