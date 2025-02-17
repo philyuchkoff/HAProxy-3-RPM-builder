@@ -5,7 +5,7 @@
 ![GitHub All Releases](https://img.shields.io/github/downloads/philyuchkoff/HAProxy-3-RPM-builder/total?style=for-the-badge)
 
 
-### [HAProxy](http://www.haproxy.org/) 3.1.0 2024/11/26
+### [HAProxy](http://www.haproxy.org/) 3.1.3 2024/01/29
 
 Perform the following steps on a build box as a regular user:
 
@@ -47,11 +47,11 @@ Resulting RPM will be stored in
 
 ### Install:
 
-    sudo dnf -y install /opt/HAProxy-3-RPM-builder/rpmbuild/RPMS/x86_64/haproxy-3.1.0-1.el8.x86_64.rpm
+    sudo dnf -y install /opt/HAProxy-3-RPM-builder/rpmbuild/RPMS/x86_64/haproxy-3.1.3-1.el8.x86_64.rpm
 
 or, if you build *.rpm with Docker:
 
-    sudo dnf -y install RPMS/haproxy-3.1.0-1.el8.x86_64.rpm 
+    sudo dnf -y install RPMS/haproxy-3.1.3-1.el8.x86_64.rpm 
     
 
 ### Check after install:
