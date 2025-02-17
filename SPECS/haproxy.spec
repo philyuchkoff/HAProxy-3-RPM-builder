@@ -34,13 +34,8 @@ BuildRoot: %{_tmppath}/%{name}-%{version}-root
 BuildRequires: pcre-devel
 BuildRequires: zlib-devel
 BuildRequires: make
-# Оптимизация флагов компиляции
-BuildRequires: gcc >= 4.8.0
-BuildRequires: openssl-devel >= 1.0.2
-# Добавление поддержки дополнительных функций
-BuildRequires: lua-devel
-BuildRequires: pcre2-devel
-BuildRequires: libslz-devel
+BuildRequires: gcc openssl-devel
+BuildRequires: openssl-devel
 
 Requires(pre):      shadow-utils
 Requires:           rsyslog
@@ -91,14 +86,10 @@ RPM_BUILD_NCPUS="`/usr/bin/nproc 2>/dev/null || /usr/bin/getconf _NPROCESSORS_ON
 
 # Default opts
 systemd_opts=
-pcre_opts="USE_PCRE2=1 USE_PCRE2_JIT=1"  # Использование PCRE2 вместо устаревшего PCRE
+pcre_opts="USE_PCRE=1"
 USE_TFO=
 USE_NS=
-USE_QUIC=1  # Добавление поддержки HTTP/3 QUIC
-USE_PROMEX=1  # Включение Prometheus exporter
-USE_SLZ=1  # Использование оптимизированной компрессии SLZ
-${SET_LUA:=USE_LUA=1}  # Включение поддержки Lua по умолчанию
-    
+
 %if 0%{?el7} || 0%{?el8} || 0%{?el9}
 systemd_opts="USE_SYSTEMD=1"
 pcre_opts="USE_PCRE=1 USE_PCRE_JIT=1"
@@ -117,7 +108,7 @@ SET_LUA="USE_LUA=1"
 SET_PROMETHEUS="EXTRA_OBJS=addons/promex/service-prometheus.o"
 %endif
 
-%{__make} -j$RPM_BUILD_NCPUS %{?_smp_mflags} CPU="generic" TARGET="linux-glibc" ${systemd_opts} ${pcre_opts} USE_OPENSSL=1 USE_ZLIB=1 USE_PROMEX=${USE_PROMEX} USE_SLZ=${USE_SLZ} ${regparm_opts} ADDINC="%{optflags}" USE_LINUX_TPROXY=1 USE_THREAD=1 USE_TFO=${USE_TFO} USE_NS=${USE_NS} ${SET_LUA} ${SET_PROMETHEUS} ADDLIB="%{__global_ldflags} -Wl,-z,now"
+%{__make} -j$RPM_BUILD_NCPUS %{?_smp_mflags} CPU="generic" TARGET="linux-glibc" ${systemd_opts} ${pcre_opts} USE_OPENSSL=1 USE_ZLIB=1 USE_PROMEX=1 ${regparm_opts} ADDINC="%{optflags}" USE_LINUX_TPROXY=1 USE_THREAD=1 USE_TFO=${USE_TFO} USE_NS=${USE_NS} ${SET_LUA} ${SET_PROMETHEUS} ADDLIB="%{__global_ldflags}"
 
 %{__make} admin/halog/halog OPTIMIZE="%{optflags} %{__global_ldflags}"
 
@@ -136,7 +127,7 @@ popd
 %{__install} -d %{buildroot}%{_sysconfdir}/logrotate.d
 %{__install} -d %{buildroot}%{_sysconfdir}/rsyslog.d
 %{__install} -d %{buildroot}%{_localstatedir}/log/%{name}
-%{__install} -d %{buildroot}%{_datadir}/%{name}
+
 %{__install} -s %{name} %{buildroot}%{_sbindir}/
 
 
