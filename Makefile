@@ -16,7 +16,7 @@ SUDO := $(if $(filter 1,$(NO_SUDO)),,sudo)
 all: build
 
 install_prereq:
-$(SUDO) dnf install -y pcre-devel make gcc openssl-devel rpm-build systemd-devel wget sed zlib-devel
+	$(SUDO) dnf install -y pcre-devel make gcc openssl-devel rpm-build systemd-devel wget sed zlib-devel
 
 clean:
 	$(SUDO) rm -f ./SOURCES/haproxy-${VERSION}.tar.gz
