@@ -10,54 +10,32 @@ ifeq ("${VERSION}","./")
 endif
 RELEASE?=1
 
+# Определяем SUDO в зависимости от NO_SUDO
+SUDO := $(if $(filter 1,$(NO_SUDO)),,sudo)
+
 all: build
 
 install_prereq:
-ifeq ($(NO_SUDO),1)
-	dnf install -y pcre-devel make gcc openssl-devel rpm-build systemd-devel wget sed zlib-devel
-else
-	sudo dnf install -y pcre-devel make gcc openssl-devel rpm-build systemd-devel wget sed zlib-devel
-endif
+$(SUDO) dnf install -y pcre-devel make gcc openssl-devel rpm-build systemd-devel wget sed zlib-devel
 
 clean:
-ifeq ($(NO_SUDO),1)
-	rm -f ./SOURCES/haproxy-${VERSION}.tar.gz
-	rm -rf ./lua-${LUA_VERSION}*
-	rm -rf ./rpmbuild
-	mkdir -p ./rpmbuild/SPECS/ ./rpmbuild/SOURCES/ ./rpmbuild/RPMS/ ./rpmbuild/SRPMS/
-
-else
-	sudo rm -f ./SOURCES/haproxy-${VERSION}.tar.gz
-	sudo rm -rf ./lua-${LUA_VERSION}*
-	sudo rm -rf ./rpmbuild
-	sudo mkdir -p ./rpmbuild/SPECS/ ./rpmbuild/SOURCES/ ./rpmbuild/RPMS/ ./rpmbuild/SRPMS/
-endif
+	$(SUDO) rm -f ./SOURCES/haproxy-${VERSION}.tar.gz
+	$(SUDO) rm -rf ./lua-${LUA_VERSION}*
+	$(SUDO) rm -rf ./rpmbuild
+	$(SUDO) mkdir -p ./rpmbuild/SPECS/ ./rpmbuild/SOURCES/ ./rpmbuild/RPMS/ ./rpmbuild/SRPMS/
 
 download-upstream:
-ifeq ($(NO_SUDO),1)
-	wget https://www.haproxy.org/download/${MAINVERSION}/src/haproxy-${VERSION}.tar.gz -O ./SOURCES/haproxy-${VERSION}.tar.gz
-else
-	sudo wget https://www.haproxy.org/download/${MAINVERSION}/src/haproxy-${VERSION}.tar.gz -O ./SOURCES/haproxy-${VERSION}.tar.gz
-endif
+	$(SUDO) wget https://www.haproxy.org/download/${MAINVERSION}/src/haproxy-${VERSION}.tar.gz -O ./SOURCES/haproxy-${VERSION}.tar.gz
 
 build_lua:
-ifeq ($(NO_SUDO),1)
-	dnf install -y readline-devel
-	wget --no-check-certificate https://www.lua.org/ftp/lua-${LUA_VERSION}.tar.gz
-	tar xzf lua-${LUA_VERSION}.tar.gz
-	cd lua-${LUA_VERSION}
-	$(MAKE) -C lua-${LUA_VERSION} clean
-	$(MAKE) -C lua-${LUA_VERSION} MYCFLAGS=-fPIC linux test  # MYCFLAGS=-fPIC is required during linux ld
-	$(MAKE) -C lua-${LUA_VERSION} install
-else
-	sudo dnf install -y readline-devel
-	sudo wget --no-check-certificate https://www.lua.org/ftp/lua-${LUA_VERSION}.tar.gz
-	sudo tar xzf lua-${LUA_VERSION}.tar.gz
-	cd lua-${LUA_VERSION}
-	sudo $(MAKE) -C lua-${LUA_VERSION} clean
-	sudo $(MAKE) -C lua-${LUA_VERSION} MYCFLAGS=-fPIC linux test  # MYCFLAGS=-fPIC is required during linux ld
-	sudo $(MAKE) -C lua-${LUA_VERSION} install
-endif
+	$(SUDO) dnf install -y readline-devel
+	$(SUDO) wget --no-check-certificate https://www.lua.org/ftp/lua-${LUA_VERSION}.tar.gz
+	$(SUDO) tar xzf lua-${LUA_VERSION}.tar.gz
+	cd lua-${LUA_VERSION} && \
+	$(SUDO) $(MAKE) clean && \
+	$(SUDO) $(MAKE) MYCFLAGS=-fPIC linux test && \
+	$(SUDO) $(MAKE) install && \
+	cd ..
 
 build_stages := install_prereq clean download-upstream
 ifeq ($(USE_LUA),1)
@@ -76,10 +54,9 @@ else
 endif
 
 build: $(build_stages)
-ifeq ($(NO_SUDO),1)
-	cp -r ./SPECS/* ./rpmbuild/SPECS/ || true
-	cp -r ./SOURCES/* ./rpmbuild/SOURCES/ || true
-	rpmbuild -ba SPECS/haproxy.spec \
+	$(SUDO) cp -r ./SPECS/* ./rpmbuild/SPECS/ || true
+	$(SUDO) cp -r ./SOURCES/* ./rpmbuild/SOURCES/ || true
+	$(SUDO) rpmbuild -ba SPECS/haproxy.spec \
 	--define "mainversion ${MAINVERSION}" \
 	--define "version ${VERSION}" \
 	--define "release ${RELEASE}" \
@@ -90,18 +67,3 @@ ifeq ($(NO_SUDO),1)
 	--define "_srcrpmdir %{_topdir}/SRPMS" \
 	--define "_use_lua ${USE_LUA}" \
 	--define "_use_prometheus ${USE_PROMETHEUS}"
-else
-	sudo cp -r ./SPECS/* ./rpmbuild/SPECS/ || true
-	sudo cp -r ./SOURCES/* ./rpmbuild/SOURCES/ || true
-	sudo rpmbuild -ba SPECS/haproxy.spec \
-	--define "mainversion ${MAINVERSION}" \
-	--define "version ${VERSION}" \
-	--define "release ${RELEASE}" \
-	--define "_topdir %(pwd)/rpmbuild" \
-	--define "_builddir %{_topdir}/BUILD" \
-	--define "_buildroot %{_topdir}/BUILDROOT" \
-	--define "_rpmdir %{_topdir}/RPMS" \
-	--define "_srcrpmdir %{_topdir}/SRPMS" \
-	--define "_use_lua ${USE_LUA}" \
-	--define "_use_prometheus ${USE_PROMETHEUS}"
-endif
