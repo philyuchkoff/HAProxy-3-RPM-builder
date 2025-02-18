@@ -25,7 +25,7 @@ clean:
 	$(SUDO) mkdir -p ./rpmbuild/SPECS/ ./rpmbuild/SOURCES/ ./rpmbuild/RPMS/ ./rpmbuild/SRPMS/
 
 download-upstream:
-	$(SUDO) wget https://www.haproxy.org/download/${MAINVERSION}/src/haproxy-${VERSION}.tar.gz -O ./SOURCES/haproxy-${VERSION}.tar.gz
+	$(SUDO) curl -L -o ./SOURCES/haproxy-${VERSION}.tar.gz https://www.haproxy.org/download/${MAINVERSION}/src/haproxy-${VERSION}.tar.gz
 
 build_lua:
 	$(SUDO) dnf install -y readline-devel
