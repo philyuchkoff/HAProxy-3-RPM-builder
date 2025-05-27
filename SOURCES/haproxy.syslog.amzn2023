@@ -1,6 +1,22 @@
-$ModLoad imudp
-$UDPServerRun 514
-$ModLoad imtcp
-$InputTCPServerRun 514
-local0.* -/var/log/haproxy.log
+# /opt/HAProxy-3-RPM-builder/rpmbuild/SOURCES/haproxy.syslog.amzn2023
+# Syslog configuration for HAProxy on Amazon Linux 2023 (using rsyslog)
+
+# Enable UDP reception (for older syslog protocols)
+module(load="imudp")
+input(type="imudp" port="514")
+
+# Enable TCP reception (more reliable)
+module(load="imtcp")
+input(type="imtcp" port="514")
+
+# HAProxy logging configuration
+local0.*    /var/log/haproxy.log
 & ~
+
+# Optional: Send HAProxy logs to a remote syslog server
+# Replace with your actual remote server IP
+# local0.* @@remote-syslog-server:514
+
+# Template for structured logging (optional)
+template(name="haproxy-template" type="string"
+         string="%timestamp% %hostname% %syslogtag%%msg%")
