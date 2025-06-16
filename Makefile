@@ -16,7 +16,7 @@ VERSION := $(if $(VERSION),$(VERSION),${MAINVERSION}.0)
 SUDO := $(if $(filter 1,$(NO_SUDO)),,sudo)
 
 # Основные зависимости
-BASE_DEPS := pcre-devel make gcc openssl-devel rpm-build systemd-devel curl sed zlib-devel
+BASE_DEPS := pcre-devel pcre2-devel make gcc openssl-devel rpm-build systemd-devel curl sed zlib-devel
 LUA_DEPS := readline-devel
 
 # Этапы сборки
