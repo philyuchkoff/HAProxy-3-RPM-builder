@@ -6,16 +6,17 @@ NO_SUDO ?= 0
 USE_PROMETHEUS ?= 0
 RELEASE ?= 1
 
-# Автоматическое определение последней версии HAProxy
-VERSION := $(shell wget -qO- https://git.haproxy.org/git/haproxy-${MAINVERSION}.git/refs/tags/ | \
-            grep -oP '(?<=>v?)[^<]+' | sort -rV | head -1)
+# Автоматическое определение последней версии HAProxy с официального сайта
+VERSION := $(shell curl -s https://www.haproxy.org/download/${MAINVERSION}/src/ | \
+            grep -oP 'haproxy-${MAINVERSION}\.[0-9]+\.tar\.gz' | \
+            sort -rV | head -1 | sed 's/haproxy-\(.*\)\.tar\.gz/\1/')
 VERSION := $(if $(VERSION),$(VERSION),${MAINVERSION}.0)
 
 # Определение SUDO
 SUDO := $(if $(filter 1,$(NO_SUDO)),,sudo)
 
 # Основные зависимости
-BASE_DEPS := pcre-devel make gcc openssl-devel rpm-build systemd-devel wget sed zlib-devel
+BASE_DEPS := pcre-devel make gcc openssl-devel rpm-build systemd-devel curl sed zlib-devel
 LUA_DEPS := readline-devel
 
 # Этапы сборки
@@ -38,12 +39,12 @@ clean:
 	$(SUDO) mkdir -p ./rpmbuild/{SPECS,SOURCES,RPMS,SRPMS}
 
 download-upstream:
-	$(SUDO) wget https://www.haproxy.org/download/${MAINVERSION}/src/haproxy-${VERSION}.tar.gz \
-	          -O ./SOURCES/haproxy-${VERSION}.tar.gz
+	$(SUDO) curl -L https://www.haproxy.org/download/${MAINVERSION}/src/haproxy-${VERSION}.tar.gz \
+	          -o ./SOURCES/haproxy-${VERSION}.tar.gz
 
 build_lua:
 	$(SUDO) dnf install -y $(LUA_DEPS)
-	$(SUDO) wget --no-check-certificate https://www.lua.org/ftp/lua-${LUA_VERSION}.tar.gz
+	$(SUDO) curl -L https://www.lua.org/ftp/lua-${LUA_VERSION}.tar.gz -o lua-${LUA_VERSION}.tar.gz
 	$(SUDO) tar xzf lua-${LUA_VERSION}.tar.gz
 	cd lua-${LUA_VERSION} && \
 	$(SUDO) $(MAKE) clean && \
