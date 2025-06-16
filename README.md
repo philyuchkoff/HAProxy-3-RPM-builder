@@ -1,4 +1,4 @@
-# RPM builder for HAProxy 3.1 (CentOS 8/9)
+# RPM builder for HAProxy 3.2 (CentOS 8/9)
 ## Build latest HAProxy binary with prometheus metrics support
 
 ![GitHub last commit](https://img.shields.io/github/last-commit/philyuchkoff/HAProxy-3-RPM-builder?style=for-the-badge)
