@@ -1,0 +1,28 @@
+name: Build HAProxy RPM
+
+on:
+  push:
+    branches: [ "main" ]  # Запуск при пуше в main
+  workflow_dispatch:      # Ручной запуск через Actions tab
+
+jobs:
+  build-rpm:
+    runs-on: centos:latest
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Install build dependencies
+        run: |
+          sudo yum install -y rpm-build rpmdevtools make gcc openssl-devel pcre2-devel systemd-devel
+
+      - name: Build HAProxy RPM
+        run: |
+          make USE_PROMETHEUS=1
+
+      - name: Upload RPM artifact
+        uses: actions/upload-artifact@v3
+        with:
+          name: haproxy-rpm
+          path: ./RPMS/**/*.rpm  # Путь к собранным RPM
