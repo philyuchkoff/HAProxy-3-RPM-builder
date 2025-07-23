@@ -47,11 +47,11 @@ Resulting RPM will be stored in
 
 ### Install:
 
-    sudo dnf -y install /opt/HAProxy-3-RPM-builder/rpmbuild/RPMS/x86_64/haproxy-3.2.2-1.el9.x86_64.rpm
+    sudo dnf -y install /opt/HAProxy-3-RPM-builder/rpmbuild/RPMS/x86_64/haproxy-3.2.3-1.el9.x86_64.rpm
 
 or, if you build *.rpm with Docker:
 
-    sudo dnf -y install RPMS/haproxy-3.2.2-1.el9.x86_64.rpm 
+    sudo dnf -y install RPMS/haproxy-3.2.3-1.el9.x86_64.rpm 
     
 
 ### Check after install:
