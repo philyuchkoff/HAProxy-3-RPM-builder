@@ -31,7 +31,8 @@ Source4: %{name}.syslog%{?dist}
 Source5: halog.1
 BuildRoot: %{_tmppath}/%{name}-%{version}-root
 
-%if 0%{?el10}
+# PCRE selection: EL8, EL9, and EL10 use PCRE2. EL6/7 use PCRE1.
+%if 0%{?rhel} >= 8
 BuildRequires: pcre2-devel
 %else
 BuildRequires: pcre-devel
@@ -39,7 +40,7 @@ BuildRequires: pcre-devel
 
 BuildRequires: zlib-devel
 BuildRequires: make
-BuildRequires: gcc openssl-devel
+BuildRequires: gcc
 BuildRequires: openssl-devel
 
 Requires(pre):      shadow-utils
@@ -51,15 +52,8 @@ Requires(preun):    chkconfig, initscripts
 Requires(postun):   initscripts
 %endif
 
-%if 0%{?el7} || 0%{?amzn2} || 0%{?el8} || 0%{?el9}
-BuildRequires:      systemd-units
-BuildRequires:      systemd-devel
-Requires(post):     systemd
-Requires(preun):    systemd
-Requires(postun):   systemd
-%endif
-
-%if 0%{?el10}
+# Systemd dependencies for EL7+ (including EL10)
+%if 0%{?el7} || 0%{?amzn2} || 0%{?el8} || 0%{?el9} || 0%{?el10}
 BuildRequires:      systemd
 Requires(post):     systemd
 Requires(preun):    systemd
@@ -85,32 +79,26 @@ https://github.com/philyuchkoff/HAProxy-3-RPM-builder
 %prep
 %setup -q
 
-# We don't want any perl dependecies in this RPM:
+# We don't want any perl dependencies in this RPM:
 %define __perl_requires /bin/true
 
 %build
-regparm_opts=
-%ifarch %ix86 x86_64
-#regparm_opts="USE_REGPARM=1"
-%endif
-
 RPM_BUILD_NCPUS="`/usr/bin/nproc 2>/dev/null || /usr/bin/getconf _NPROCESSORS_ONLN`";
 
 # Default opts
-systemd_opts=
 pcre_opts="USE_PCRE=1"
 USE_TFO=
 USE_NS=
 
-%if 0%{?el7} || 0%{?el8} || 0%{?el9}
-systemd_opts="USE_SYSTEMD=1"
+# PCRE2 flags for EL8+
+%if 0%{?rhel} >= 8
+pcre_opts="USE_PCRE2=1 USE_PCRE2_JIT=1"
+%else
+# PCRE1 flags for EL7/6
 pcre_opts="USE_PCRE=1 USE_PCRE_JIT=1"
 %endif
 
-%if 0%{?el10}
-pcre_opts="USE_PCRE2=1 USE_PCRE2_JIT=1"
-%endif
-
+# TFO and NS support for EL7+
 %if 0%{?el7} || 0%{?el8} || 0%{?el9} || 0%{?el10}
 USE_TFO=1
 USE_NS=1
@@ -124,7 +112,14 @@ SET_LUA="USE_LUA=1"
 SET_PROMETHEUS="EXTRA_OBJS=addons/promex/service-prometheus.o"
 %endif
 
-%{__make} -j$RPM_BUILD_NCPUS %{?_smp_mflags} CPU="generic" TARGET="linux-glibc" ${systemd_opts} ${pcre_opts} USE_OPENSSL=1 USE_ZLIB=1 USE_PROMEX=1 ${regparm_opts} ADDINC="%{optflags}" USE_LINUX_TPROXY=1 USE_THREAD=1 USE_TFO=${USE_TFO} USE_NS=${USE_NS} ${SET_LUA} ${SET_PROMETHEUS} ADDLIB="%{__global_ldflags}"
+%{__make} -j$RPM_BUILD_NCPUS %{?_smp_mflags} CPU="generic" TARGET="linux-glibc" \
+    ${pcre_opts} \
+    USE_OPENSSL=1 USE_ZLIB=1 USE_PROMEX=1 \
+    ADDINC="%{optflags}" \
+    USE_LINUX_TPROXY=1 USE_THREAD=1 \
+    USE_TFO=${USE_TFO} USE_NS=${USE_NS} \
+    ${SET_LUA} ${SET_PROMETHEUS} \
+    ADDLIB="%{__global_ldflags}"
 
 %{__make} admin/halog/halog OPTIMIZE="%{optflags} %{__global_ldflags}"
 
@@ -145,8 +140,8 @@ popd
 %{__install} -d %{buildroot}%{_localstatedir}/log/%{name}
 %{__install} -d %{buildroot}%{_localstatedir}/lib/%{name}
 
+# Install binary once (previously duplicated)
 %{__install} %{name} %{buildroot}%{_sbindir}/
-
 
 %{__install} -c -m 644 %{SOURCE1} %{buildroot}%{_sysconfdir}/%{name}/haproxy.cfg
 %{__install} -c -m 644 examples/errorfiles/*.http %{buildroot}%{_sysconfdir}/%{name}/errors/
@@ -164,7 +159,6 @@ popd
 %endif
 
 %if 0%{?el7} || 0%{?amzn2} || 0%{?el8} || 0%{?el9} || 0%{?el10}
-%{__install} %{name} %{buildroot}%{_sbindir}/
 %{__install} -p -D -m 0644 %{SOURCE2} %{buildroot}%{_unitdir}/%{name}.service
 %endif
 
