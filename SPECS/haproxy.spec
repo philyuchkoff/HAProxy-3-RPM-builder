@@ -31,7 +31,12 @@ Source4: %{name}.syslog%{?dist}
 Source5: halog.1
 BuildRoot: %{_tmppath}/%{name}-%{version}-root
 
+%if 0%{?el10}
+BuildRequires: pcre2-devel
+%else
 BuildRequires: pcre-devel
+%endif
+
 BuildRequires: zlib-devel
 BuildRequires: make
 BuildRequires: gcc openssl-devel
@@ -49,6 +54,13 @@ Requires(postun):   initscripts
 %if 0%{?el7} || 0%{?amzn2} || 0%{?el8} || 0%{?el9}
 BuildRequires:      systemd-units
 BuildRequires:      systemd-devel
+Requires(post):     systemd
+Requires(preun):    systemd
+Requires(postun):   systemd
+%endif
+
+%if 0%{?el10}
+BuildRequires:      systemd
 Requires(post):     systemd
 Requires(preun):    systemd
 Requires(postun):   systemd
@@ -79,7 +91,7 @@ https://github.com/philyuchkoff/HAProxy-3-RPM-builder
 %build
 regparm_opts=
 %ifarch %ix86 x86_64
-regparm_opts="USE_REGPARM=1"
+#regparm_opts="USE_REGPARM=1"
 %endif
 
 RPM_BUILD_NCPUS="`/usr/bin/nproc 2>/dev/null || /usr/bin/getconf _NPROCESSORS_ONLN`";
@@ -95,7 +107,11 @@ systemd_opts="USE_SYSTEMD=1"
 pcre_opts="USE_PCRE=1 USE_PCRE_JIT=1"
 %endif
 
-%if 0%{?el7} || 0%{?el8} || 0%{?el9}
+%if 0%{?el10}
+pcre_opts="USE_PCRE2=1 USE_PCRE2_JIT=1"
+%endif
+
+%if 0%{?el7} || 0%{?el8} || 0%{?el9} || 0%{?el10}
 USE_TFO=1
 USE_NS=1
 %endif
@@ -127,8 +143,9 @@ popd
 %{__install} -d %{buildroot}%{_sysconfdir}/logrotate.d
 %{__install} -d %{buildroot}%{_sysconfdir}/rsyslog.d
 %{__install} -d %{buildroot}%{_localstatedir}/log/%{name}
+%{__install} -d %{buildroot}%{_localstatedir}/lib/%{name}
 
-%{__install} -s %{name} %{buildroot}%{_sbindir}/
+%{__install} %{name} %{buildroot}%{_sbindir}/
 
 
 %{__install} -c -m 644 %{SOURCE1} %{buildroot}%{_sysconfdir}/%{name}/haproxy.cfg
@@ -146,8 +163,8 @@ popd
 %{__install} -c -m 755 %{SOURCE2} %{buildroot}%{_sysconfdir}/rc.d/init.d/%{name}
 %endif
 
-%if 0%{?el7} || 0%{?amzn2} || 0%{?el8} || 0%{?el9}
-%{__install} -s %{name} %{buildroot}%{_sbindir}/
+%if 0%{?el7} || 0%{?amzn2} || 0%{?el8} || 0%{?el9} || 0%{?el10}
+%{__install} %{name} %{buildroot}%{_sbindir}/
 %{__install} -p -D -m 0644 %{SOURCE2} %{buildroot}%{_unitdir}/%{name}.service
 %endif
 
@@ -163,7 +180,7 @@ getent passwd %{haproxy_user} >/dev/null || \
 exit 0
 
 %post
-%if 0%{?el7} || 0%{?amzn2} || 0%{?el8} || 0%{?el9}
+%if 0%{?el7} || 0%{?amzn2} || 0%{?el8} || 0%{?el9} || 0%{?el10}
 %systemd_post %{name}.service
 systemctl reload-or-try-restart rsyslog.service
 %endif
@@ -174,7 +191,7 @@ systemctl reload-or-try-restart rsyslog.service
 %endif
 
 %preun
-%if 0%{?el7} || 0%{?amzn2} || 0%{?el8} || 0%{?el9}
+%if 0%{?el7} || 0%{?amzn2} || 0%{?el8} || 0%{?el9} || 0%{?el10}
 %systemd_preun %{name}.service
 %endif
 
@@ -186,7 +203,7 @@ fi
 %endif
 
 %postun
-%if 0%{?el7} || 0%{?amzn2} || 0%{?el8} || 0%{?el9}
+%if 0%{?el7} || 0%{?amzn2} || 0%{?el8} || 0%{?el9} || 0%{?el10}
 %systemd_postun_with_restart %{name}.service
 systemctl reload-or-try-restart rsyslog.service
 %endif
@@ -201,7 +218,7 @@ fi
 %files
 %defattr(-,root,root)
 %doc CHANGELOG examples/*.cfg doc/configuration.txt doc/intro.txt doc/management.txt doc/proxy-protocol.txt
-%if 0%{?el7} || 0%{?amzn2} || 0%{?el8} || 0%{?el9}
+%if 0%{?el7} || 0%{?amzn2} || 0%{?el8} || 0%{?el9} || 0%{?el10}
     %license LICENSE
 %endif
 %doc %{_mandir}/man1/*
@@ -210,6 +227,7 @@ fi
 %attr(0644,root,root) %config(noreplace) %{_sysconfdir}/%{name}/%{name}.cfg
 %attr(0755,root,root) %{_sbindir}/%{name}
 %dir %{_localstatedir}/log/%{name}
+%dir %{_localstatedir}/lib/%{name}
 %attr(0644,root,root) %config(noreplace) %{_sysconfdir}/logrotate.d/%{name}
 %attr(0644,root,root) %config(noreplace) %{_sysconfdir}/rsyslog.d/49-%{name}.conf
 %{_bindir}/halog
@@ -219,6 +237,6 @@ fi
 %attr(0755,root,root) %config %_sysconfdir/rc.d/init.d/%{name}
 %endif
 
-%if 0%{?el7} || 0%{?amzn2} || 0%{?el8} || 0%{?el9}
+%if 0%{?el7} || 0%{?amzn2} || 0%{?el8} || 0%{?el9} || 0%{?el10}
 %attr(-,root,root) %{_unitdir}/%{name}.service
 %endif
