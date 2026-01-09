@@ -1,4 +1,4 @@
-# RPM builder for HAProxy 3.2 (CentOS 8/9)
+# RPM builder for HAProxy 3.2 (EL8/EL9/EL10/Amazon Linux 2023)
 ## Build latest HAProxy binary with prometheus metrics support
 
 ![GitHub last commit](https://img.shields.io/github/last-commit/philyuchkoff/HAProxy-3-RPM-builder?style=for-the-badge)
@@ -81,8 +81,15 @@ If SELINUX is enabled  - switch off this: open /etc/selinux/config and change SE
 - Create `/var/lib/haproxy` directory
 - Check on the rpcbind service to ensure that this service is started 
 
-#### :o: Failed to download metadata for repo ‘AppStream’ (CentOS8/9)
+#### :o: Failed to download metadata for repo 'AppStream' (CentOS8/9)
 ##### Solution:
     cd /etc/yum.repos.d/
     sudo sed -i 's/mirrorlist/#mirrorlist/g' /etc/yum.repos.d/CentOS-*
     sudo sed -i 's|#baseurl=http://mirror.centos.org|baseurl=http://vault.centos.org|g' /etc/yum.repos.d/CentOS-*
+
+
+### Supported platforms:
+- Enterprise Linux 8 (RHEL 8, CentOS 8, Rocky Linux 8, AlmaLinux 8)
+- Enterprise Linux 9 (RHEL 9, CentOS 9, Rocky Linux 9, AlmaLinux 9)
+- Enterprise Linux 10 (RHEL 10, CentOS 10, Rocky Linux 10, AlmaLinux 10)
+- Amazon Linux 2023
