@@ -32,7 +32,7 @@ Source5: halog.1
 BuildRoot: %{_tmppath}/%{name}-%{version}-root
 
 # PCRE selection: EL8, EL9, and EL10 use PCRE2. EL6/7 use PCRE1.
-%if 0%{?rhel} >= 8
+%if 0%{?rhel} >= 8 || 0%{?amzn2023}
 BuildRequires: pcre2-devel
 %else
 BuildRequires: pcre-devel
@@ -53,7 +53,7 @@ Requires(postun):   initscripts
 %endif
 
 # Systemd dependencies for EL7+ (including EL10)
-%if 0%{?el7} || 0%{?amzn2} || 0%{?el8} || 0%{?el9} || 0%{?el10}
+%if 0%{?el7} || 0%{?amzn2} || 0%{?el8} || 0%{?el9} || 0%{?el10} || 0%{?amzn2023}
 BuildRequires:      systemd
 Requires(post):     systemd
 Requires(preun):    systemd
@@ -91,7 +91,7 @@ USE_TFO=
 USE_NS=
 
 # PCRE2 flags for EL8+
-%if 0%{?rhel} >= 8
+%if 0%{?rhel} >= 8 || 0%{?amzn2023}
 pcre_opts="USE_PCRE2=1 USE_PCRE2_JIT=1"
 %else
 # PCRE1 flags for EL7/6
@@ -99,7 +99,7 @@ pcre_opts="USE_PCRE=1 USE_PCRE_JIT=1"
 %endif
 
 # TFO and NS support for EL7+
-%if 0%{?el7} || 0%{?el8} || 0%{?el9} || 0%{?el10}
+%if 0%{?el7} || 0%{?amzn2} || 0%{?el8} || 0%{?el9} || 0%{?el10} || 0%{?amzn2023}
 USE_TFO=1
 USE_NS=1
 %endif
@@ -158,7 +158,7 @@ popd
 %{__install} -c -m 755 %{SOURCE2} %{buildroot}%{_sysconfdir}/rc.d/init.d/%{name}
 %endif
 
-%if 0%{?el7} || 0%{?amzn2} || 0%{?el8} || 0%{?el9} || 0%{?el10}
+%if 0%{?el7} || 0%{?amzn2} || 0%{?el8} || 0%{?el9} || 0%{?el10} || 0%{?amzn2023}
 %{__install} -p -D -m 0644 %{SOURCE2} %{buildroot}%{_unitdir}/%{name}.service
 %endif
 
@@ -174,7 +174,7 @@ getent passwd %{haproxy_user} >/dev/null || \
 exit 0
 
 %post
-%if 0%{?el7} || 0%{?amzn2} || 0%{?el8} || 0%{?el9} || 0%{?el10}
+%if 0%{?el7} || 0%{?amzn2} || 0%{?el8} || 0%{?el9} || 0%{?el10} || 0%{?amzn2023}
 %systemd_post %{name}.service
 systemctl reload-or-try-restart rsyslog.service
 %endif
@@ -185,7 +185,7 @@ systemctl reload-or-try-restart rsyslog.service
 %endif
 
 %preun
-%if 0%{?el7} || 0%{?amzn2} || 0%{?el8} || 0%{?el9} || 0%{?el10}
+%if 0%{?el7} || 0%{?amzn2} || 0%{?el8} || 0%{?el9} || 0%{?el10} || 0%{?amzn2023}
 %systemd_preun %{name}.service
 %endif
 
@@ -197,7 +197,7 @@ fi
 %endif
 
 %postun
-%if 0%{?el7} || 0%{?amzn2} || 0%{?el8} || 0%{?el9} || 0%{?el10}
+%if 0%{?el7} || 0%{?amzn2} || 0%{?el8} || 0%{?el9} || 0%{?el10} || 0%{?amzn2023}
 %systemd_postun_with_restart %{name}.service
 systemctl reload-or-try-restart rsyslog.service
 %endif
@@ -212,7 +212,7 @@ fi
 %files
 %defattr(-,root,root)
 %doc CHANGELOG examples/*.cfg doc/configuration.txt doc/intro.txt doc/management.txt doc/proxy-protocol.txt
-%if 0%{?el7} || 0%{?amzn2} || 0%{?el8} || 0%{?el9} || 0%{?el10}
+%if 0%{?el7} || 0%{?amzn2} || 0%{?el8} || 0%{?el9} || 0%{?el10} || 0%{?amzn2023}
     %license LICENSE
 %endif
 %doc %{_mandir}/man1/*
@@ -231,6 +231,6 @@ fi
 %attr(0755,root,root) %config %_sysconfdir/rc.d/init.d/%{name}
 %endif
 
-%if 0%{?el7} || 0%{?amzn2} || 0%{?el8} || 0%{?el9} || 0%{?el10}
+%if 0%{?el7} || 0%{?amzn2} || 0%{?el8} || 0%{?el9} || 0%{?el10} || 0%{?amzn2023}
 %attr(-,root,root) %{_unitdir}/%{name}.service
 %endif
