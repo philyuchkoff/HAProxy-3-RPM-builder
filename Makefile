@@ -16,7 +16,16 @@ VERSION := $(if $(VERSION),$(VERSION),${MAINVERSION}.0)
 SUDO := $(if $(filter 1,$(NO_SUDO)),,sudo)
 
 # Основные зависимости
-BASE_DEPS := pcre-devel pcre2-devel make gcc openssl-devel rpm-build systemd-devel curl sed zlib-devel
+BASE_DEPS := make gcc openssl-devel rpm-build systemd-devel curl sed zlib-devel
+
+# Detect RHEL version to select correct PCRE library
+RHEL_VER := $(shell rpm -E %{rhel} 2>/dev/null)
+ifeq ($(shell [ -n "$(RHEL_VER)" ] && [ "$(RHEL_VER)" -ge 8 ] 2>/dev/null && echo 1 || echo 0),1)
+    BASE_DEPS += pcre2-devel
+else
+    BASE_DEPS += pcre-devel
+endif
+
 LUA_DEPS := readline-devel
 
 # Этапы сборки
