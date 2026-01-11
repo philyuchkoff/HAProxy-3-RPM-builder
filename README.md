@@ -75,6 +75,12 @@ If SELINUX is enabled  - switch off this: open /etc/selinux/config and change SE
     sudo sed -i s/^SELINUX=.*$/SELINUX=disabled/ /etc/selinux/config
 
 
+#### :o: Work with non-standard ports (SELinux)
+
+    sudo dnf -yd install policycoreutils-python-utils
+    sudo semanage port -a -t http_port_t -p tcp 9999
+
+
 #### :o: Cannot chroot1
     [/usr/sbin/haproxy.main()] Cannot chroot1(/var/lib/haproxy)  
 ##### Solution:
