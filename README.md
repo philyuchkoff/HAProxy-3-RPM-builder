@@ -1,11 +1,11 @@
-# RPM builder for HAProxy 3.2 (CentOS 8/9)
+# RPM builder for HAProxy
 ## Build latest HAProxy binary with prometheus metrics support
 
 ![GitHub last commit](https://img.shields.io/github/last-commit/philyuchkoff/HAProxy-3-RPM-builder?style=for-the-badge)
 ![GitHub All Releases](https://img.shields.io/github/downloads/philyuchkoff/HAProxy-3-RPM-builder/total?style=for-the-badge)
 
 
-### [HAProxy](http://www.haproxy.org/) 3.2.6 2025/10/03
+### [HAProxy](http://www.haproxy.org/) 3.3.3 2026/02/12
 
 Perform the following steps on a build box as a regular user:
 
@@ -47,11 +47,11 @@ Resulting RPM will be stored in
 
 ### Install:
 
-    sudo dnf -y install /opt/HAProxy-3-RPM-builder/rpmbuild/RPMS/x86_64/haproxy-3.2.6-1.el9.x86_64.rpm
+    sudo dnf -y install /opt/HAProxy-3-RPM-builder/rpmbuild/RPMS/x86_64/haproxy-3.3.3-1.el9.x86_64.rpm
 
 or, if you build *.rpm with Docker:
 
-    sudo dnf -y install RPMS/haproxy-3.2.6-1.el9.x86_64.rpm 
+    sudo dnf -y install RPMS/haproxy-3.3.3-1.el9.x86_64.rpm 
     
 
 ### Check after install:
