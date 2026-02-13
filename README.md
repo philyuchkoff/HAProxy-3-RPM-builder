@@ -1,12 +1,11 @@
 # RPM builder for HAProxy
 ## Build latest HAProxy binary with prometheus metrics support
 
+![HAProxy version](https://img.shields.io/badge/HAProxy-3.3.3-blue?style=for-the-badge)
 ![GitHub last commit](https://img.shields.io/github/last-commit/philyuchkoff/HAProxy-3-RPM-builder?style=for-the-badge)
 ![GitHub All Releases](https://img.shields.io/github/downloads/philyuchkoff/HAProxy-3-RPM-builder/total?style=for-the-badge)
 
-
-### [HAProxy](http://www.haproxy.org/) 3.3.3 2026/02/12
-
+## 🚀 Quick Start
 Perform the following steps on a build box as a regular user:
 
     sudo dnf -y groupinstall 'Development Tools'
@@ -14,9 +13,9 @@ Perform the following steps on a build box as a regular user:
     sudo git clone https://github.com/philyuchkoff/HAProxy-3-RPM-builder.git
     cd ./HAProxy-3-RPM-builder
 
-### Build:
+### 🛠️ Build options:
 
-#### Without Lua:
+#### Basic:
 
     sudo make
     
@@ -24,7 +23,7 @@ Perform the following steps on a build box as a regular user:
 
     sudo make USE_LUA=1
 
-#### With Prometheus module:
+#### With Prometheus metrics:
 
     sudo make USE_PROMETHEUS=1
 
@@ -36,7 +35,7 @@ Resulting RPM will be stored in
 
     /opt/HAProxy-3-RPM-builder/rpmbuild/RPMS/x86_64/
 
-#### Build using Docker:
+#### Using Docker:
 
     sudo make run-docker
 
@@ -45,7 +44,7 @@ Resulting RPM will be stored in
     ./RPMS/
 
 
-### Install:
+### ✅ Install:
 
     sudo dnf -y install /opt/HAProxy-3-RPM-builder/rpmbuild/RPMS/x86_64/haproxy-3.3.3-1.el9.x86_64.rpm
 
@@ -54,17 +53,15 @@ or, if you build *.rpm with Docker:
     sudo dnf -y install RPMS/haproxy-3.3.3-1.el9.x86_64.rpm 
     
 
-### Check after install:
+#### Check after install:
 
     haproxy -v
 
-### Stats page
+### 📊 Stats page
 
 After installation you can access a stats page **without** authenticating via the URL: `http://<YourHAProxyServer>:9000/haproxy_stats`
 
-
-
-### Common problem:
+### 🆘 Common problem:
 
 #### :o: If some not working - check SELINUX:
 
