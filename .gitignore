@@ -4,3 +4,4 @@ RPMS
 .docker
 *DS_Store
 *.rpm
+.idea
