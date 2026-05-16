@@ -52,9 +52,8 @@ Requires(preun):    chkconfig, initscripts
 Requires(postun):   initscripts
 %endif
 
-# Systemd dependencies for EL7+ (including EL10)
+# Systemd scriptlet deps for EL7+ (including EL10)
 %if 0%{?el7} || 0%{?amzn2} || 0%{?el8} || 0%{?el9} || 0%{?el10} || 0%{?amzn2023}
-BuildRequires:      systemd
 Requires(post):     systemd
 Requires(preun):    systemd
 Requires(postun):   systemd
@@ -199,13 +198,11 @@ fi
 %postun
 %if 0%{?el7} || 0%{?amzn2} || 0%{?el8} || 0%{?el9} || 0%{?el10} || 0%{?amzn2023}
 %systemd_postun_with_restart %{name}.service
-systemctl reload-or-try-restart rsyslog.service
 %endif
 
 %if 0%{?el6} || 0%{?amzn1}
 if [ "$1" -ge "1" ]; then
   /sbin/service %{name} condrestart >/dev/null 2>&1 || :
-  /sbin/service rsyslog restart >/dev/null 2>&1 || :
 fi
 %endif
 

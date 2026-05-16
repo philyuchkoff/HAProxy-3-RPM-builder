@@ -96,3 +96,17 @@ If SELINUX is enabled  - switch off this: open /etc/selinux/config and change SE
 - Enterprise Linux 9 (RHEL 9, CentOS 9, Rocky Linux 9, AlmaLinux 9)
 - Enterprise Linux 10 (RHEL 10, CentOS 10, Rocky Linux 10, AlmaLinux 10)
 - Amazon Linux 2023
+
+### ⚠️ Breaking changes
+
+#### Stats socket path changed
+The default `stats socket` path in `haproxy.cfg` was changed from `/run/haproxy/haproxy.sock` to `/run/haproxy.sock` (removed the `/run/haproxy/` subdirectory so no extra directory creation is needed).
+
+**Migration**: If you have monitoring scripts, `socat` commands, or external tools referencing the old path, update them to the new path:
+
+```diff
+- /run/haproxy/haproxy.sock
++ /run/haproxy.sock
+```
+
+Or override the path in your own `haproxy.cfg` to keep the previous value.

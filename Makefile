@@ -18,9 +18,9 @@ SUDO := $(if $(filter 1,$(NO_SUDO)),,sudo)
 # Основные зависимости
 BASE_DEPS := make gcc openssl-devel rpm-build systemd-devel curl sed zlib-devel
 
-# Detect RHEL version to select correct PCRE library
-RHEL_VER := $(shell rpm -E %{rhel} 2>/dev/null)
-ifeq ($(shell [ -n "$(RHEL_VER)" ] && [ "$(RHEL_VER)" -ge 8 ] 2>/dev/null && echo 1 || echo 0),1)
+# Detect distro to select correct PCRE library (PCRE2 for EL8+/AMZN2023)
+DIST := $(shell rpm -E %{dist} 2>/dev/null)
+ifneq ($(filter .el8 .el9 .el10 .amzn2023,$(DIST)),)
     BASE_DEPS += pcre2-devel
 else
     BASE_DEPS += pcre-devel
