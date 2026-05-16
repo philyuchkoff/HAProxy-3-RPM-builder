@@ -1,6 +1,6 @@
 HOME := $(abspath $(shell pwd))
 MAINVERSION ?= 3.3
-LUA_VERSION ?= 5.4.8
+LUA_VERSION ?= 5.5.0
 USE_LUA ?= 0
 NO_SUDO ?= 0
 USE_PROMETHEUS ?= 0
