@@ -16,7 +16,16 @@ VERSION := $(if $(VERSION),$(VERSION),${MAINVERSION}.0)
 SUDO := $(if $(filter 1,$(NO_SUDO)),,sudo)
 
 # Основные зависимости
-BASE_DEPS := pcre-devel pcre2-devel make gcc openssl-devel rpm-build systemd-devel curl sed zlib-devel
+BASE_DEPS := make gcc openssl-devel rpm-build systemd-devel curl sed zlib-devel
+
+# Detect distro to select correct PCRE library (PCRE2 for EL8+/AMZN2023)
+DIST := $(shell rpm -E %{dist} 2>/dev/null)
+ifneq ($(filter .el8 .el9 .el10 .amzn2023,$(DIST)),)
+    BASE_DEPS += pcre2-devel
+else
+    BASE_DEPS += pcre-devel
+endif
+
 LUA_DEPS := readline-devel
 
 # Этапы сборки
