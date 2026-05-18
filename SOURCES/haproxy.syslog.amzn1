@@ -7,7 +7,7 @@ $FileCreateMode 0600
 $template HAProxy,"%TIMESTAMP% %syslogseverity-text:::UPPERCASE%: %msg%\n"
 $template HAProxyAccess,"%msg%\n"
 
-local2.=info     /var/log/haproxy/access.log;HAProxyAccess
-local2.=notice;local2.=warning    /var/log/haproxy/status.log;HAProxy
-local2.error    /var/log/haproxy/error.log;HAProxy
-local2.* ~
+local0.=info     /var/log/haproxy/access.log;HAProxyAccess
+local0.=notice;local0.=warning    /var/log/haproxy/status.log;HAProxy
+local0.error    /var/log/haproxy/error.log;HAProxy
+local0.* ~
