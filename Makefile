@@ -1,5 +1,5 @@
 HOME := $(abspath $(shell pwd))
-MAINVERSION ?= 3.3
+MAINVERSION ?= 3.4
 LUA_VERSION ?= 5.5.0
 USE_LUA ?= 0
 NO_SUDO ?= 0
