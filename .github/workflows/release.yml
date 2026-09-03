@@ -33,14 +33,14 @@ jobs:
       USE_PROMETHEUS: 1
 
     steps:
+      - name: Check out repository
+        uses: actions/checkout@v6
+
       - name: Install tools
         run: |
           dnf -y install epel-release
-          dnf -y swap curl-minimal curl
+          dnf -y swap --allowerasing curl-minimal curl
           dnf -y install git jq gawk make rpm-build gcc openssl-devel pcre2-devel systemd-devel zlib-devel sed
-
-      - name: Check out repository
-        uses: actions/checkout@v6
 
       - name: Detect HAProxy version
         id: detect
