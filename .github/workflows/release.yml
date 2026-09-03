@@ -36,7 +36,8 @@ jobs:
       - name: Install tools
         run: |
           dnf -y install epel-release
-          dnf -y install git jq curl make rpm-build gcc openssl-devel pcre2-devel systemd-devel zlib-devel sed
+          dnf -y swap curl-minimal curl
+          dnf -y install git jq make rpm-build gcc openssl-devel pcre2-devel systemd-devel zlib-devel sed
 
       - name: Check out repository
         uses: actions/checkout@v6
