@@ -1,0 +1,200 @@
+name: Build HAProxy RPM and create release
+
+on:
+  schedule:
+    # Каждый день в 03:17 UTC — проверка наличия нового релиза HAProxy
+    - cron: '17 3 * * *'
+  workflow_dispatch:
+    inputs:
+      mainversion:
+        description: 'Major HAProxy version (e.g. 3.4). Empty = auto from Makefile'
+        required: false
+        default: ''
+        type: string
+      force:
+        description: 'Rebuild and re-upload even if the release already exists'
+        required: false
+        default: false
+        type: boolean
+
+permissions:
+  contents: write
+
+concurrency:
+  group: haproxy-rpm-release
+  cancel-in-progress: false
+
+jobs:
+  build-and-release:
+    runs-on: ubuntu-latest
+    container:
+      image: almalinux:9
+    env:
+      USE_PROMETHEUS: 1
+
+    steps:
+      - name: Install tools
+        run: |
+          dnf -y install epel-release
+          dnf -y install git jq curl make rpm-build gcc openssl-devel pcre2-devel systemd-devel zlib-devel sed
+
+      - name: Check out repository
+        uses: actions/checkout@v6
+
+      - name: Detect HAProxy version
+        id: detect
+        env:
+          INPUT_MAINVERSION: ${{ github.event.inputs.mainversion || '' }}
+          INPUT_FORCE: ${{ github.event.inputs.force || 'false' }}
+        run: |
+          set -euo pipefail
+
+          if [ -n "$INPUT_MAINVERSION" ]; then
+            MAINVERSION="$INPUT_MAINVERSION"
+          else
+            MAINVERSION=$(grep -oP 'MAINVERSION\s*\?\=\s*\K[0-9]+\.[0-9]+' Makefile | head -1)
+          fi
+          echo "mainversion=$MAINVERSION" >> "$GITHUB_OUTPUT"
+
+          # Ищем последнюю стабильную версию на haproxy.org
+          PAGE=$(curl -fsSL "https://www.haproxy.org/download/${MAINVERSION}/src/")
+          VERSION=$(echo "$PAGE" | grep -oE "haproxy-${MAINVERSION//./\\.}\.[0-9]+\.tar\.gz" | sort -rV | head -1 | sed 's/haproxy-\(.*\)\.tar\.gz/\1/')
+
+          if [ -z "$VERSION" ]; then
+            echo "Could not find any HAProxy ${MAINVERSION}.x version" >&2
+            exit 1
+          fi
+
+          echo "Latest HAProxy upstream: $VERSION"
+          echo "version=$VERSION" >> "$GITHUB_OUTPUT"
+
+          # Проверка, существует ли уже такой релиз
+          if [ "$INPUT_FORCE" = "true" ]; then
+            SHOULD_BUILD=true
+          else
+            CURRENT=$(curl -fsSL "https://api.github.com/repos/${GITHUB_REPOSITORY}/releases/latest" | jq -r '.tag_name // empty' || true)
+            if [ -z "$CURRENT" ] || [ "$VERSION" != "$CURRENT" ]; then
+              SHOULD_BUILD=true
+            else
+              echo "Version $VERSION already released. Skipping."
+              SHOULD_BUILD=false
+            fi
+          fi
+          echo "should_build=$SHOULD_BUILD" >> "$GITHUB_OUTPUT"
+
+      - name: Nothing to build
+        if: steps.detect.outputs.should_build == 'false'
+        run: |
+          echo "HAProxy ${{ steps.detect.outputs.version }} is already released. Skipping."
+
+      - name: Download HAProxy source
+        if: steps.detect.outputs.should_build == 'true'
+        run: |
+          VERSION="${{ steps.detect.outputs.version }}"
+          MAINVERSION="${{ steps.detect.outputs.mainversion }}"
+          curl -fsSL -o "SOURCES/haproxy-${VERSION}.tar.gz" \
+            "https://www.haproxy.org/download/${MAINVERSION}/src/haproxy-${VERSION}.tar.gz"
+
+      - name: Define dist for AlmaLinux 9
+        if: steps.detect.outputs.should_build == 'true'
+        run: |
+          echo "%dist .el9" >> ~/.rpmmacros
+
+      - name: Build RPM
+        if: steps.detect.outputs.should_build == 'true'
+        run: |
+          set -euo pipefail
+          VERSION="${{ steps.detect.outputs.version }}"
+          MAINVERSION="${{ steps.detect.outputs.mainversion }}"
+          RELEASE="1"
+
+          mkdir -p rpmbuild/{SPECS,SOURCES,RPMS,SRPMS,BUILD,BUILDROOT}
+          cp -r SPECS/*   rpmbuild/SPECS/
+          cp -r SOURCES/* rpmbuild/SOURCES/
+
+          rpmbuild -ba SPECS/haproxy.spec \
+            --define "mainversion ${MAINVERSION}" \
+            --define "version ${VERSION}" \
+            --define "release ${RELEASE}" \
+            --define "_topdir $(pwd)/rpmbuild" \
+            --define "_builddir %{_topdir}/BUILD" \
+            --define "_buildroot %{_topdir}/BUILDROOT" \
+            --define "_rpmdir %{_topdir}/RPMS" \
+            --define "_srcrpmdir %{_topdir}/SRPMS" \
+            --define "_use_lua 0" \
+            --define "_use_prometheus 1"
+
+      - name: Collect RPM artefacts
+        if: steps.detect.outputs.should_build == 'true'
+        run: |
+          set -euo pipefail
+          VERSION="${{ steps.detect.outputs.version }}"
+
+          mkdir -p distr
+          cp rpmbuild/RPMS/x86_64/*.rpm distr/      2>/dev/null || true
+          cp rpmbuild/SRPMS/*.rpm          distr/      2>/dev/null || true
+          cp rpmbuild/RPMS/noarch/*.rpm     distr/      2>/dev/null || true
+
+          sha256sum distr/*.rpm | tee distr/SHA256SUMS
+
+          echo "RPMs built:"
+          ls -la distr/
+
+      - name: Create / update GitHub release
+        if: steps.detect.outputs.should_build == 'true'
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          set -euo pipefail
+
+          VERSION="${{ steps.detect.outputs.version }}"
+          MAINVERSION="${{ steps.detect.outputs.mainversion }}"
+          REPO="${GITHUB_REPOSITORY}"
+          AUTH="Authorization: Bearer ${GITHUB_TOKEN}"
+
+          # Описание релиза
+          BODY="Build of [HAProxy ${VERSION}](https://www.haproxy.org/download/${MAINVERSION}/src/CHANGELOG) for Enterprise Linux 8/9/10/Amazon Linux 2023.
+
+          Features: Prometheus metrics (USE_PROMEX=1), PCRE2, OpenSSL, zlib, threads.
+
+          ```
+          $(cat distr/SHA256SUMS)
+          ```"
+
+          PAYLOAD=$(jq -n \
+            --arg tag "$VERSION" \
+            --arg name "HAProxy ${VERSION}" \
+            --arg body "$BODY" \
+            '{tag_name:$tag, name:$name, body:$body}')
+
+          EXISTING=$(curl -fsSL -H "$AUTH" "https://api.github.com/repos/${REPO}/releases/tags/${VERSION}" || true)
+          RELEASE_ID=$(echo "$EXISTING" | jq -r '.id // empty')
+
+          if [ -z "$RELEASE_ID" ]; then
+            echo "Creating new release ${VERSION}"
+            RELEASE_ID=$(curl -fsSL -X POST \
+              -H "$AUTH" -H "Content-Type: application/json" \
+              -d "$PAYLOAD" \
+              "https://api.github.com/repos/${REPO}/releases" | jq -r '.id')
+          else
+            echo "Release ${VERSION} already exists (id=${RELEASE_ID}), updating assets"
+          fi
+
+          ASSETS=$(curl -fsSL -H "$AUTH" "https://api.github.com/repos/${REPO}/releases/${RELEASE_ID}/assets")
+
+          for f in distr/*.rpm distr/SHA256SUMS; do
+            [ -f "$f" ] || continue
+            NAME=$(basename "$f")
+            ASSET_ID=$(echo "$ASSETS" | jq -r --arg n "$NAME" '.[] | select(.name==$n) | .id' | head -1)
+            if [ -n "$ASSET_ID" ]; then
+              echo "Deleting old asset ${NAME} (id=${ASSET_ID})"
+              curl -fsSL -X DELETE -H "$AUTH" "https://api.github.com/repos/${REPO}/releases/assets/${ASSET_ID}" || true
+            fi
+            echo "Uploading ${NAME}"
+            curl -fsSL -X POST \
+              -H "$AUTH" -H "Content-Type: application/octet-stream" \
+              --data-binary "@${f}" \
+              "https://uploads.github.com/repos/${REPO}/releases/${RELEASE_ID}/assets?name=${NAME}"
+          done
+
+          echo "Done: https://github.com/${REPO}/releases/tag/${VERSION}"
