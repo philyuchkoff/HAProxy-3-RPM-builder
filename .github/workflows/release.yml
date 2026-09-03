@@ -27,37 +27,23 @@ concurrency:
 jobs:
   build-and-release:
     runs-on: ubuntu-latest
-    container:
-      image: almalinux:9
-    env:
-      USE_PROMETHEUS: 1
 
     steps:
       - name: Check out repository
         uses: actions/checkout@v6
 
-      - name: Install tools
-        run: |
-          dnf -y install epel-release
-          dnf -y swap --allowerasing curl-minimal curl
-          dnf -y install git jq gawk make rpm-build gcc openssl-devel pcre2-devel systemd-devel zlib-devel sed
-
       - name: Detect HAProxy version
         id: detect
-        env:
-          INPUT_MAINVERSION: ${{ github.event.inputs.mainversion || '' }}
-          INPUT_FORCE: ${{ github.event.inputs.force || 'false' }}
         run: |
           set -euo pipefail
 
-          if [ -n "$INPUT_MAINVERSION" ]; then
-            MAINVERSION="$INPUT_MAINVERSION"
+          if [ -n "${INPUT_MAINVERSION:-}" ]; then
+            MAINVERSION="${INPUT_MAINVERSION}"
           else
             MAINVERSION=$(grep -oP 'MAINVERSION\s*\?\=\s*\K[0-9]+\.[0-9]+' Makefile | head -1)
           fi
           echo "mainversion=$MAINVERSION" >> "$GITHUB_OUTPUT"
 
-          # Ищем последнюю стабильную версию на haproxy.org
           PAGE=$(curl -fsSL "https://www.haproxy.org/download/${MAINVERSION}/src/")
           VERSION=$(echo "$PAGE" | grep -oE "haproxy-${MAINVERSION//./\\.}\.[0-9]+\.tar\.gz" | sort -rV | head -1 | sed 's/haproxy-\(.*\)\.tar\.gz/\1/')
 
@@ -69,8 +55,7 @@ jobs:
           echo "Latest HAProxy upstream: $VERSION"
           echo "version=$VERSION" >> "$GITHUB_OUTPUT"
 
-          # Проверка, существует ли уже такой релиз
-          if [ "$INPUT_FORCE" = "true" ]; then
+          if [ "${INPUT_FORCE:-}" = "true" ]; then
             SHOULD_BUILD=true
           else
             CURRENT=$(curl -fsSL "https://api.github.com/repos/${GITHUB_REPOSITORY}/releases/latest" | jq -r '.tag_name // empty' || true)
@@ -82,59 +67,64 @@ jobs:
             fi
           fi
           echo "should_build=$SHOULD_BUILD" >> "$GITHUB_OUTPUT"
+        env:
+          INPUT_MAINVERSION: ${{ github.event.inputs.mainversion || '' }}
+          INPUT_FORCE: ${{ github.event.inputs.force || 'false' }}
 
       - name: Nothing to build
         if: steps.detect.outputs.should_build == 'false'
         run: |
           echo "HAProxy ${{ steps.detect.outputs.version }} is already released. Skipping."
 
-      - name: Download HAProxy source
-        if: steps.detect.outputs.should_build == 'true'
-        run: |
-          VERSION="${{ steps.detect.outputs.version }}"
-          MAINVERSION="${{ steps.detect.outputs.mainversion }}"
-          curl -fsSL -o "SOURCES/haproxy-${VERSION}.tar.gz" \
-            "https://www.haproxy.org/download/${MAINVERSION}/src/haproxy-${VERSION}.tar.gz"
-
-      - name: Define dist for AlmaLinux 9
-        if: steps.detect.outputs.should_build == 'true'
-        run: |
-          echo "%dist .el9" >> ~/.rpmmacros
-
-      - name: Build RPM
+      - name: Build RPM in AlmaLinux 9 container
         if: steps.detect.outputs.should_build == 'true'
         run: |
           set -euo pipefail
           VERSION="${{ steps.detect.outputs.version }}"
           MAINVERSION="${{ steps.detect.outputs.mainversion }}"
-          RELEASE="1"
+          WORKSPACE="$(pwd)"
 
-          mkdir -p rpmbuild/{SPECS,SOURCES,RPMS,SRPMS,BUILD,BUILDROOT}
-          cp -r SPECS/*   rpmbuild/SPECS/
-          cp -r SOURCES/* rpmbuild/SOURCES/
+          docker run --rm \
+            -v "${WORKSPACE}:/workspace" \
+            -w /workspace \
+            almalinux:9 \
+            bash -c "
+              set -euo pipefail
+              dnf -y install epel-release
+              dnf -y swap --allowerasing curl-minimal curl
+              dnf -y install make rpm-build gcc openssl-devel pcre2-devel systemd-devel zlib-devel sed
 
-          rpmbuild -ba SPECS/haproxy.spec \
-            --define "mainversion ${MAINVERSION}" \
-            --define "version ${VERSION}" \
-            --define "release ${RELEASE}" \
-            --define "_topdir $(pwd)/rpmbuild" \
-            --define "_builddir %{_topdir}/BUILD" \
-            --define "_buildroot %{_topdir}/BUILDROOT" \
-            --define "_rpmdir %{_topdir}/RPMS" \
-            --define "_srcrpmdir %{_topdir}/SRPMS" \
-            --define "_use_lua 0" \
-            --define "_use_prometheus 1"
+              echo '%dist .el9' >> ~/.rpmmacros
+
+              curl -fsSL -o SOURCES/haproxy-${VERSION}.tar.gz \
+                https://www.haproxy.org/download/${MAINVERSION}/src/haproxy-${VERSION}.tar.gz
+
+              mkdir -p rpmbuild/{SPECS,SOURCES,RPMS,SRPMS,BUILD,BUILDROOT}
+              cp -r SPECS/*   rpmbuild/SPECS/
+              cp -r SOURCES/* rpmbuild/SOURCES/
+
+              rpmbuild -ba SPECS/haproxy.spec \
+                --define 'mainversion ${MAINVERSION}' \
+                --define 'version ${VERSION}' \
+                --define 'release 1' \
+                --define '_topdir /workspace/rpmbuild' \
+                --define '_builddir %{_topdir}/BUILD' \
+                --define '_buildroot %{_topdir}/BUILDROOT' \
+                --define '_rpmdir %{_topdir}/RPMS' \
+                --define '_srcrpmdir %{_topdir}/SRPMS' \
+                --define '_use_lua 0' \
+                --define '_use_prometheus 1'
+            "
 
       - name: Collect RPM artefacts
         if: steps.detect.outputs.should_build == 'true'
         run: |
           set -euo pipefail
-          VERSION="${{ steps.detect.outputs.version }}"
 
           mkdir -p distr
-          cp rpmbuild/RPMS/x86_64/*.rpm distr/      2>/dev/null || true
-          cp rpmbuild/SRPMS/*.rpm          distr/      2>/dev/null || true
-          cp rpmbuild/RPMS/noarch/*.rpm     distr/      2>/dev/null || true
+          cp rpmbuild/RPMS/x86_64/*.rpm distr/  2>/dev/null || true
+          cp rpmbuild/SRPMS/*.rpm          distr/  2>/dev/null || true
+          cp rpmbuild/RPMS/noarch/*.rpm     distr/  2>/dev/null || true
 
           sha256sum distr/*.rpm | tee distr/SHA256SUMS
 
@@ -153,14 +143,13 @@ jobs:
           REPO="${GITHUB_REPOSITORY}"
           AUTH="Authorization: Bearer ${GITHUB_TOKEN}"
 
-          # Описание релиза
           BODY="Build of [HAProxy ${VERSION}](https://www.haproxy.org/download/${MAINVERSION}/src/CHANGELOG) for Enterprise Linux 8/9/10/Amazon Linux 2023.
 
           Features: Prometheus metrics (USE_PROMEX=1), PCRE2, OpenSSL, zlib, threads.
 
-          ```
+          \`\`\`
           $(cat distr/SHA256SUMS)
-          ```"
+          \`\`\`"
 
           PAYLOAD=$(jq -n \
             --arg tag "$VERSION" \
