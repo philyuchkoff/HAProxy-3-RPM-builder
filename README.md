@@ -1,7 +1,7 @@
 # RPM builder for HAProxy (EL8/EL9/EL10/Amazon Linux 2023)
 ## Build latest HAProxy binary with prometheus metrics support
 
-![HAProxy version](https://img.shields.io/badge/HAProxy-3.4.3-blue?style=for-the-badge)
+![HAProxy version](https://img.shields.io/badge/HAProxy-3.4.4-blue?style=for-the-badge)
 ![GitHub Release](https://img.shields.io/github/v/release/philyuchkoff/HAProxy-3-RPM-builder?style=for-the-badge)
 ![GitHub All Releases](https://img.shields.io/github/downloads/philyuchkoff/HAProxy-3-RPM-builder/total?style=for-the-badge)
 ![GitHub last commit](https://img.shields.io/github/last-commit/philyuchkoff/HAProxy-3-RPM-builder?style=for-the-badge)
