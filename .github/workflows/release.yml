@@ -145,7 +145,7 @@ jobs:
 
           BODY="Build of [HAProxy ${VERSION}](https://www.haproxy.org/download/${MAINVERSION}/src/CHANGELOG) for Enterprise Linux 8/9/10/Amazon Linux 2023.
 
-          Features: Prometheus metrics (USE_PROMEX=1), PCRE2, OpenSSL, zlib, threads.
+          Features: Prometheus metrics (USE_PROMETHEUS=1), PCRE2, OpenSSL, zlib, threads.
 
           \`\`\`
           $(cat distr/SHA256SUMS)
