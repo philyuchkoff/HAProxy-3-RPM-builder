@@ -6,6 +6,10 @@
 ![GitHub All Releases](https://img.shields.io/github/downloads/philyuchkoff/HAProxy-3-RPM-builder/total?style=for-the-badge)
 ![GitHub last commit](https://img.shields.io/github/last-commit/philyuchkoff/HAProxy-3-RPM-builder?style=for-the-badge)
 
+## [HAProxy official site](https://www.haproxy.org/)
+
+---
+
 ## 🚀 Quick Start
 
 ### 📦 Prebuilt RPM (easiest)
